@@ -18,13 +18,22 @@ logger = logging.getLogger(__name__)
 load_app_env()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 AI_PROVIDER = (os.getenv("DAC_AI_PROVIDER") or ("openai" if OPENAI_API_KEY else "mock")).lower()
 
-# Client OpenAI (sync). En mode CodeCamp, le backend doit pouvoir demarrer sans cle IA.
-client = OpenAI(api_key=OPENAI_API_KEY) if AI_PROVIDER == "openai" and OPENAI_API_KEY else None
+# Client IA (sync). Mistral expose une API compatible OpenAI — même client, base_url différente.
+if AI_PROVIDER == "mistral" and MISTRAL_API_KEY:
+    client = OpenAI(api_key=MISTRAL_API_KEY, base_url="https://api.mistral.ai/v1")
+elif AI_PROVIDER == "openai" and OPENAI_API_KEY:
+    client = OpenAI(api_key=OPENAI_API_KEY)
+else:
+    client = None
 
-# Modele configurable. DAC_AI_MODEL est le nom expose dans le rendu CodeCamp.
-_DEFAULT_MODEL = os.getenv("DAC_AI_MODEL") or os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
+# Modele configurable selon le provider.
+if AI_PROVIDER == "mistral":
+    _DEFAULT_MODEL = os.getenv("DAC_AI_MODEL") or "mistral-small-latest"
+else:
+    _DEFAULT_MODEL = os.getenv("DAC_AI_MODEL") or os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
 
 
 def _mock_response(messages: list[dict], response_format: Optional[Dict[str, Any]] = None) -> str:
@@ -38,17 +47,17 @@ def _mock_response(messages: list[dict], response_format: Optional[Dict[str, Any
     system_message = next((m.get("content", "") for m in messages if m.get("role") == "system"), "")
     last_user = next((m.get("content", "") for m in reversed(messages) if m.get("role") == "user"), "")
     if "convertis des demandes" in system_message:
-        raise RuntimeError("Mode IA mock actif: generation IA indisponible sans cle OpenAI.")
+        raise RuntimeError("Mode IA mock actif: generation IA indisponible sans cle API.")
 
     if "Réponse (en français)" in last_user or "répond naturellement" in system_message:
         return (
-            "Mode IA mock actif: aucune cle OpenAI n'est configuree. "
-            "Je peux aider a lancer DAC, mais les reponses IA avancees necessitent DAC_AI_PROVIDER=openai."
+            "Mode IA mock actif: aucune cle API n'est configuree. "
+            "Je peux aider a lancer DAC, mais les reponses IA avancees necessitent un provider configure."
         )
 
     return (
-        "Mode IA mock actif: aucune cle OpenAI n'est configuree. "
-        "Configure DAC_AI_PROVIDER=openai et OPENAI_API_KEY pour activer les reponses IA."
+        "Mode IA mock actif: aucune cle API n'est configuree. "
+        "Configure DAC_AI_PROVIDER=mistral + MISTRAL_API_KEY, ou DAC_AI_PROVIDER=openai + OPENAI_API_KEY."
     )
 
 
@@ -90,7 +99,7 @@ def _chat_with_retry(messages: list[dict], model: Optional[str] = None,
     model = model or _DEFAULT_MODEL
     last_err = None
 
-    if AI_PROVIDER != "openai" or client is None:
+    if client is None:
         return _mock_response(messages, response_format=response_format)
     
     def _make_openai_call():

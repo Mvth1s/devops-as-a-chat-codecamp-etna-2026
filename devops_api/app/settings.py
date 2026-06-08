@@ -7,6 +7,7 @@ load_app_env()
 class Settings:
     BACKEND_BASE_URL: str = os.getenv("BACKEND_BASE_URL", "https://devops-backend-uzw2.onrender.com")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "").strip()
+    MISTRAL_API_KEY: str = os.getenv("MISTRAL_API_KEY", "").strip()
     DAC_AI_PROVIDER: str = os.getenv("DAC_AI_PROVIDER", "mock").strip().lower()
     SECRET_KEY: str = os.getenv("SECRET_KEY", "").strip()
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
@@ -24,6 +25,8 @@ class Settings:
             missing.append("FERNET_KEY")
         if self.DAC_AI_PROVIDER == "openai" and not self.OPENAI_API_KEY:
             missing.append("OPENAI_API_KEY")
+        if self.DAC_AI_PROVIDER == "mistral" and not self.MISTRAL_API_KEY:
+            missing.append("MISTRAL_API_KEY")
         if missing:
             raise RuntimeError(f"Variables d'environnement manquantes: {', '.join(missing)}")
 
