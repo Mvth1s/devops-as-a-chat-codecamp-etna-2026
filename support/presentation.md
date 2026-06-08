@@ -34,13 +34,13 @@ Frontend React -> FastAPI -> detection intention -> generation Terraform -> vali
 Prompt:
 
 ```text
-cree une instance EC2 Ubuntu
+créer une instance EC2 Ubuntu
 ```
 
 Parametres:
 
 ```text
-AWS Ubuntu 22.04 t2.micro eu-west-1
+AWS, Ubuntu 22.04, t3.micro, eu-west-1
 ```
 
 Confirmation:
