@@ -1,35 +1,17 @@
 # © 2024–2026 TOURE Arnaud Patrick
 # Licensed under the MIT License
 
-import logging
-import re
-
-from app.paths import LOGS_DIR
-logger = logging.getLogger(__name__)
-
-import os
 import json
 import logging
+import os
+import re
+
 from app.services.gpt_service import (
     generate_instructions_from_gpt,
     generate_free_chat_completion
 )
 
-#  Répertoire des logs
-BASE_LOG_DIR = LOGS_DIR
-os.makedirs(BASE_LOG_DIR, exist_ok=True)
-LOG_FILE_PATH = os.path.join(BASE_LOG_DIR, "chat_service.log")
-
-#  Création du logger
-logger = logging.getLogger("chat_service")
-logger.setLevel(logging.INFO)
-
-#  Évite les handlers en double
-if not logger.hasHandlers():
-    handler = logging.FileHandler(LOG_FILE_PATH)
-    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+logger = logging.getLogger(__name__)
 
 #  Safe JSON loader for GPT responses
 def safe_json_loads(text: str) -> dict:

@@ -16,32 +16,26 @@ from app.maintenance import janitor_loop     # OK ménage périodique (rotation 
 from app.services.scheduler import init_scheduler, shutdown_scheduler  # OK P0.1 auto-sync
 from app.security.rate_limit import setup_rate_limiting  # OK P0.2 rate limiting centralisé
 
-# 
+#
 # Env & logs
-# 
+#
 load_app_env()
 
-# Configure logging avec fichier centralisé dans generated_files
 from pathlib import Path
 from datetime import datetime, timezone
+from app.utils.logging_utils import setup_logging, get_logger
 
 log_dir = Path(os.path.join(os.path.dirname(__file__), "../generated_files/api_logs"))
-log_dir.mkdir(parents=True, exist_ok=True)
 log_file = log_dir / f"api_{datetime.now().strftime('%Y%m%d')}.log"
 
-# Configuration logging avec fichier + console
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)s %(name)s:%(message)s',
-    handlers=[
-        logging.FileHandler(log_file, encoding='utf-8'),
-        logging.StreamHandler()
-    ]
+setup_logging(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    log_file=str(log_file),
 )
-logger = logging.getLogger(__name__)
-logger.info(f" Logging vers: {log_file}")
-logger.info(f"BACKEND_BASE_URL = {settings.BACKEND_BASE_URL}")
-logger.info(f"DATABASE URL = {engine.url}")
+logger = get_logger(__name__)
+logger.info("Logging démarré : %s", log_file)
+logger.info("BACKEND_BASE_URL=%s", settings.BACKEND_BASE_URL)
+logger.info("DATABASE_URL=%s", engine.url)
 
 # 
 # Imports des routes
