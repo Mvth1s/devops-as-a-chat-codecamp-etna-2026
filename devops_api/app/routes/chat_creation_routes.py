@@ -169,7 +169,18 @@ async def execute_infrastructure_creation(
         
         if not execution_id:
             raise Exception("execution_id manquant dans la réponse")
-        
+
+        # Lier l'AsyncTask à l'Execution dès que l'execution_id est connu
+        running_task = (
+            db.query(models.AsyncTask)
+            .filter_by(session_id=session_id, user_id=user_id, status="running")
+            .order_by(models.AsyncTask.created_at.desc())
+            .first()
+        )
+        if running_task and not running_task.execution_id:
+            running_task.execution_id = execution_id
+            db.commit()
+
         if progress_callback:
             progress_callback("generation_complete", f" Fichier {engine} généré (ID: {file_id})", 20.0)
             progress_callback("execution_ready", f" Exécution créée (ID: {execution_id})", 30.0)
