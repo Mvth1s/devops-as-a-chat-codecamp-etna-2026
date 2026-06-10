@@ -89,18 +89,23 @@ async def correlation_id_middleware(request, call_next):
 @app.middleware("http")
 async def add_dev_cors_headers(request, call_next):
     from fastapi.responses import JSONResponse
-    
+
     origin = request.headers.get("origin")
-    
+
     try:
         response = await call_next(request)
     except Exception as e:
-        # En cas d'exception, créer une réponse d'erreur avec CORS
-        logger.error(f"Exception non gérée: {e}", exc_info=True)
-        response = JSONResponse(
-            status_code=500,
-            content={"detail": f"Erreur interne: {str(e)}"}
+        cid = correlation_id_var.get()
+        logger.error(
+            "Exception non gérée : %s correlation_id=%s",
+            e,
+            cid or "-",
+            exc_info=True,
         )
+        body: dict = {"detail": f"Erreur interne : {e}"}
+        if cid:
+            body["correlation_id"] = cid
+        response = JSONResponse(status_code=500, content=body)
     
     # Ajouter les headers CORS pour localhost
     if origin in {"http://localhost:5173", "http://127.0.0.1:5173"}:
