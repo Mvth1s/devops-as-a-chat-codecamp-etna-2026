@@ -31,7 +31,7 @@ log_dir = Path(os.path.join(os.path.dirname(__file__), "../generated_files/api_l
 log_file = log_dir / f"api_{datetime.now().strftime('%Y%m%d')}.log"
 
 setup_logging(
-    level=os.getenv("LOG_LEVEL", "INFO"),
+    level=os.getenv("LOG_LEVEL") or os.getenv("DAC_LOG_LEVEL", "INFO"),
     log_file=str(log_file),
 )
 logger = get_logger(__name__)
