@@ -10,7 +10,11 @@ from typing import Any
 # ─── Structured JSON logger ───────────────────────────────────────────────────
 
 class JSONFormatter(logging.Formatter):
-    """Formatteur qui émet chaque log comme une ligne JSON."""
+    """Formatteur qui émet chaque log comme une ligne JSON.
+
+    Le correlation_id est lu depuis le ContextVar s'il est disponible,
+    sinon depuis l'attribut extra du record (pour les tests unitaires).
+    """
 
     def format(self, record: logging.LogRecord) -> str:
         entry: dict[str, Any] = {
@@ -19,9 +23,18 @@ class JSONFormatter(logging.Formatter):
             "logger": record.name,
             "msg": record.getMessage(),
         }
-        correlation_id = getattr(record, "correlation_id", None)
-        if correlation_id:
-            entry["correlation_id"] = correlation_id
+        # Lire le correlation_id depuis le ContextVar (requête HTTP en cours)
+        cid: str = ""
+        try:
+            from app.core.context import correlation_id_var
+            cid = correlation_id_var.get()
+        except Exception:
+            pass
+        # Fallback : attribut extra passé explicitement au logger
+        if not cid:
+            cid = getattr(record, "correlation_id", "")
+        if cid:
+            entry["correlation_id"] = cid
         if record.exc_info:
             entry["exc"] = self.formatException(record.exc_info)
         return json.dumps(entry, ensure_ascii=False)

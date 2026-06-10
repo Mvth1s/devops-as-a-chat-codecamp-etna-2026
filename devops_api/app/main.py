@@ -5,10 +5,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import uuid
 import logging
 import threading
 
 from app.env import load_app_env
+from app.core.context import correlation_id_var
 from app.settings import settings
 from app.database import engine
 from app.paths import ensure_dirs            # OK crée /data/generated_files + sous-dossiers
@@ -71,6 +73,17 @@ app = FastAPI(
     description="API permettant de générer, configurer et auditer une infrastructure cloud de manière automatique.",
     version="2.0.0",
 )
+
+# Corrélation : génère un X-Correlation-ID unique par requête et l'injecte
+# dans le ContextVar pour que tous les logs de la requête partagent cet ID.
+@app.middleware("http")
+async def correlation_id_middleware(request, call_next):
+    cid = request.headers.get("X-Correlation-ID") or str(uuid.uuid4())
+    correlation_id_var.set(cid)
+    response = await call_next(request)
+    response.headers["X-Correlation-ID"] = cid
+    return response
+
 
 # Dev CORS fallback (ensures headers on error responses and exceptions)
 @app.middleware("http")
