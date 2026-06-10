@@ -35,9 +35,9 @@ def log_execution_event(
         except Exception as e:
             log_content = f"[ERREUR de serialization JSON log_content] {str(e)}"
 
-    logger.info(f" [LOGGER] Log : execution_id={execution_id}, event={event}")
-    logger.info(f" [MESSAGE] {message[:100]}{'...' if len(message) > 100 else ''}")
-    logger.info(f" [LOG_CONTENT] {log_content[:100]}{'...' if len(log_content) > 100 else ''}")
+    logger.debug("[execution_logger] save event=%s execution_id=%d", event, execution_id)
+    logger.debug("[execution_logger] message=%s", message[:120])
+    logger.debug("[execution_logger] log_content=%s", log_content[:120])
 
     log = models.ExecutionLog(
         execution_id=execution_id,
@@ -49,4 +49,4 @@ def log_execution_event(
 
     db.add(log)
     db.commit()
-    logger.info(" [LOGGER] Log enregistré.")
+    logger.debug("[execution_logger] log enregistré execution_id=%d event=%s", execution_id, event)

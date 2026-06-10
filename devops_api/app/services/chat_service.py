@@ -49,14 +49,14 @@ async def detect_intent_and_action(request_text: str) -> dict:
     """
     
     #  PRIORITÉ V0: Détection spécialisée Ubuntu avant tout le reste
-    logger.info(f" Testing Ubuntu detection for: '{request_text}'")
+    logger.debug("testing ubuntu detection for: '%s'", request_text)
     
     try:
         ubuntu_intent = detect_ubuntu_creation_intent(request_text)
-        logger.info(f" Ubuntu detection result: {ubuntu_intent}")
+        logger.debug("ubuntu detection result: %s", ubuntu_intent)
         
         if ubuntu_intent["action"] == "create_ubuntu":
-            logger.info(f" V0 Fast Track - Ubuntu détecté: {ubuntu_intent}")
+            logger.info("V0 fast-track ubuntu détecté : %s", ubuntu_intent.get("action"))
             return {
                 "action": "create",  # Mapped vers le système existant
                 "description": ubuntu_intent["description"],
