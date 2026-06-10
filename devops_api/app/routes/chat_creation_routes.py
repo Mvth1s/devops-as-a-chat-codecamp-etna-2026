@@ -27,7 +27,7 @@ from app.services.aws_credentials_service import get_user_aws_credentials, has_u
 from app.services.aws_sync_service import sync_aws_instances_to_db
 from app.services.p04_p05_chat_intents import detect_ssm_check_intent
 from app.services.detect_intent_catalog import detect_intent_with_catalog
-from app.services.config_catalog import get_action_by_id
+from app.services.config_catalog import get_action_by_id, get_categories, get_suggested_actions
 from app.services import execution_service
 from app.services.free_chat_service import handle_free_chat_message
 from app.schemas.schemas import ChatMessageRequest
@@ -1081,7 +1081,7 @@ async def chat_message(
             payload = send_bot_message(
                 summary_text,
                 "awaiting_intent",
-                {"configure_result": result, "trace_id": trace_id}
+                {"configure_result": result, "trace_id": trace_id, "execution_id_db": execution.id}
             )
 
             if show_details and details_text:
